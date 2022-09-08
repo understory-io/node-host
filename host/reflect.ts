@@ -1,5 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises'
-import { basename, extname, join } from 'node:path'
+import { basename, extname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { HttpHandlerConfiguration } from '../http.js'
 import { PackageConfiguration } from './registry.js'
@@ -37,7 +37,7 @@ export interface Reflection {
 }
 
 export function resolveCpu(config: PackageJsonConfiguration, supported: CPU[]): CPU {
-    const resolved = resolve(config.cpus, supported)
+    const resolved = resolveSupported(config.cpus, supported)
     if (!resolved) {
         // resolve<T>(config, supported) actually asserts config is (T | `!${T}`)[], but that's not supported yet.
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -50,7 +50,7 @@ export function resolveOS(
     config: PackageJsonConfiguration,
     supported: NodeJS.Platform[],
 ): NodeJS.Platform {
-    const resolved = resolve(config.os, supported)
+    const resolved = resolveSupported(config.os, supported)
     if (!resolved) {
         // resolve<T>(config, supported) actually asserts config is (T | `!${T}`)[], but that's not supported yet.
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -59,7 +59,7 @@ export function resolveOS(
     return resolved
 }
 
-function resolve<T extends string>(
+function resolveSupported<T extends string>(
     config: (T | `!${T}`)[] | undefined,
     supported: T[],
 ): T | undefined {
@@ -71,13 +71,12 @@ function resolve<T extends string>(
 
 export async function reflect(path: string): Promise<Reflection> {
     const packageJson = await readConfig()
-    const files = (await readdir(path)).filter(
+    const absolutePath = resolve(process.cwd(), path)
+    const files = (await readdir(absolutePath)).filter(
         file => extname(file) === '.ts' && !file.endsWith('.d.ts'),
     )
     const { getHandlers, setMeta } = (await import(
-        pathToFileURL(
-            join(process.cwd(), 'node_modules/@riddance/host/host/registry.js'),
-        ).toString()
+        pathToFileURL(join(absolutePath, 'node_modules/@riddance/host/host/registry.js')).toString()
     )) as {
         getHandlers: (type: string) => {
             name: string
@@ -98,7 +97,7 @@ export async function reflect(path: string): Promise<Reflection> {
     for (const file of files) {
         const base = basename(file, '.ts')
         setMeta(packageJson.name, base, undefined, packageJson.config)
-        await import(pathToFileURL(join(process.cwd(), path, base + '.js')).toString())
+        await import(pathToFileURL(join(absolutePath, base + '.js')).toString())
     }
 
     return {
