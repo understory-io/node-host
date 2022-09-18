@@ -27,7 +27,7 @@ interface JsonRequestOptions extends BodylessRequestOptions {
 
 export async function executeRequest(
     log: RootLogger,
-    context: Context,
+    context: Omit<Context, 'log'>,
     handler: HttpHandler,
     options: RequestOptions,
     success: () => Promise<unknown>,
@@ -40,13 +40,13 @@ export async function executeRequest(
         : withoutRequestBody({ method: handler.method, ...options })
     log = log.enrichReserved({ meta: context.meta, request: logRequest })
     if (isShallow) {
-        context.log.trace('Shallow request')
+        log.trace('Shallow request')
         return {
             headers: {},
             status: 204,
         }
     }
-    context.log.trace('Request BEGIN')
+    log.trace('Request BEGIN')
     try {
         let parsedUrl: UrlWithParsedQuery & { pathStepAt: (index: number) => string }
         let pathSteps: string[]
@@ -69,7 +69,9 @@ export async function executeRequest(
             headers: options.headers ?? {},
         }
 
-        const result = await measure(context.log, 'execution', () => handler.entry(context, req))
+        const result = await measure(log, 'execution', () =>
+            handler.entry({ ...context, log }, req),
+        )
 
         const response = resultToResponse(result, includeBodyInLogs)
 

@@ -79,7 +79,7 @@ export function createContext(
     now?: (() => Date) | undefined,
 ): {
     log: RootLogger
-    context: Context
+    context: Omit<Context, 'log'>
     success: () => Promise<unknown>
     flush: () => Promise<void>
 } {
@@ -94,8 +94,7 @@ export function createContext(
         logTransport,
         meta?.config?.minimumLogLevel,
         outerController.signal as AbortSignal,
-    )
-    logger.enrichReserved({
+    ).enrichReserved({
         operationId: clientInfo.operationId,
         client: {
             id: clientInfo.clientId,
@@ -115,7 +114,6 @@ export function createContext(
     const successHandlers: (() => Promise<void> | void)[] = []
     const ctx = {
         env: environment ?? (process.env as Environment),
-        log: logger,
         signal: innerController.signal as AbortSignal,
         now: now ?? (() => new Date()),
         operationId: clientInfo.operationId,
@@ -138,7 +136,7 @@ export function createContext(
         onSuccess: (fn: () => Promise<void> | void) => successHandlers.push(fn),
     }
     const timeoutHandle = setTimeout(() => {
-        ctx.log.error('Timeout.', undefined, undefined)
+        logger.error('Timeout.', undefined, undefined)
         innerController.abort()
         // eslint-disable-next-line no-void
         void logger.flush()
@@ -146,7 +144,7 @@ export function createContext(
         void emitter.flush()
     }, timeout)
     const flushHandle = setTimeout(() => {
-        ctx.log.error('Aborting flush.', undefined, undefined)
+        logger.error('Aborting flush.', undefined, undefined)
         outerController.abort()
     }, timeout + 15000)
     return {
