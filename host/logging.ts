@@ -207,7 +207,7 @@ class EnrichingLogger implements Logger {
             return
         }
         this.#buffer.collect(
-            'debug',
+            'info',
             3,
             message,
             error,
@@ -221,7 +221,7 @@ class EnrichingLogger implements Logger {
             return
         }
         this.#buffer.collect(
-            'debug',
+            'warning',
             2,
             message,
             error,
