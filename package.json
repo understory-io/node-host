@@ -1,6 +1,6 @@
 {
     "name": "@riddance/host",
-    "version": "0.0.5",
+    "version": "0.0.7",
     "type": "module",
     "license": "MIT",
     "engines": {
@@ -29,7 +29,7 @@
         "./http": "./host/http.js"
     },
     "devDependencies": {
-        "@riddance/env": "0.0.2"
+        "@riddance/env": "0.0.3"
     },
     "scripts": {
         "prepare": "tsc",

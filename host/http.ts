@@ -57,7 +57,7 @@ export async function executeRequest(
                     ...parse(this.rawUrl, true),
                     pathStepAt: (index: number) => {
                         const steps = (pathSteps ??= parsedUrl.pathname?.split('/') ?? [])
-                        const step = steps[index]
+                        const step = steps[index + 1]
                         if (!step) {
                             throw new RangeError(`Path does not have a step at index ${index}.`)
                         }
