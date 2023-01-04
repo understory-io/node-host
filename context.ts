@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import { highPrecisionISODate } from './host/logging.js'
+import { highPrecisionISODate } from './lib/logging.js'
 
 export interface Environment {
     readonly [key: string]: string
