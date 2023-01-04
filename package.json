@@ -1,6 +1,6 @@
 {
     "name": "@riddance/host",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "type": "module",
     "license": "MIT",
     "engines": {
@@ -16,20 +16,20 @@
     "files": [
         "*.js",
         "*.d.ts",
-        "lib/*.js",
-        "lib/*.d.ts"
+        "host/*.js",
+        "host/*.d.ts"
     ],
     "exports": {
         "./lib/context": "./context.js",
         "./lib/http": "./http.js",
-        "./registry": "./lib/registry.js",
-        "./reflect": "./lib/reflect.js",
-        "./logging": "./lib/logging.js",
-        "./context": "./lib/context.js",
-        "./http": "./lib/http.js"
+        "./registry": "./host/registry.js",
+        "./reflect": "./host/reflect.js",
+        "./logging": "./host/logging.js",
+        "./context": "./host/context.js",
+        "./http": "./host/http.js"
     },
     "devDependencies": {
-        "@riddance/env": "0.1.1"
+        "@riddance/env": "0.1.2"
     },
     "scripts": {
         "prepare": "tsc",

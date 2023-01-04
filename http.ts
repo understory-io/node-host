@@ -1,6 +1,6 @@
 import type { UrlWithParsedQuery } from 'node:url'
 import { Context, HandlerConfiguration, Json } from './context.js'
-import { registerHttpHandler } from './lib/registry.js'
+import { registerHttpHandler } from './host/registry.js'
 
 export * from './context.js'
 
