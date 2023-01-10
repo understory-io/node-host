@@ -82,7 +82,13 @@ export async function executeRequest(
             }
         }
 
-        log = log.enrichReserved({ request: logRequest })
+        log = log.enrichReserved({
+            response: {
+                status: response.status,
+                headers: response.headers,
+                body: response.logBody,
+            },
+        })
         if (response.status < 300) {
             log.debug('Request END')
             await success()
