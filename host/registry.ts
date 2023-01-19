@@ -24,6 +24,18 @@ export function getHandlers(type: keyof HandlerTypes) {
     return (handlers[type] ?? []) as HttpHandler[]
 }
 
+export function getHandler(type: keyof HandlerTypes) {
+    const hs = getHandlers(type)
+    const [handler] = hs
+    if (!handler) {
+        throw new Error(`No ${type} handler registered.`)
+    }
+    if (hs.length !== 1) {
+        throw new Error(`Multiple ${type} handlers registered.`)
+    }
+    return handler
+}
+
 type HttpHost = (
     meta: Metadata | undefined,
     config: HandlerConfiguration | undefined,
