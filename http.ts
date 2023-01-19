@@ -4,11 +4,11 @@ import { registerHttpHandler } from './host/registry.js'
 
 export * from './context.js'
 
-export interface ResponseHeaders {
+export type ResponseHeaders = {
     [key: string]: string
 }
 
-export interface FullResult {
+export type FullResult = {
     headers?: ResponseHeaders
     status?: number
     body?: unknown
@@ -16,14 +16,14 @@ export interface FullResult {
 
 export type Result = void | string | FullResult
 
-export interface HttpRequest {
+export type HttpRequest = {
     readonly rawUrl: string
     readonly url: Readonly<UrlWithParsedQuery> & { pathStepAt: (index: number) => string }
     readonly headers: Readonly<ResponseHeaders>
     readonly body?: Json | string
 }
 
-export interface HttpHandlerConfiguration extends HandlerConfiguration {
+export type HttpHandlerConfiguration = HandlerConfiguration & {
     /**
      * A string identifying which domains can access the endpoint cross-origin.
      * @default undefined

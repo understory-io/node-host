@@ -1,7 +1,7 @@
 import { AbortSignal, Json, Logger } from '../context.js'
 import { BufferedEvent, ClientInfo, EventMetadata, EventTransport } from './context.js'
 
-interface EmitBuffer {
+type EmitBuffer = {
     [topic: string]: BufferedEvent[]
 }
 

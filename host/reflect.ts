@@ -19,13 +19,13 @@ type CPU =
 type CpuConfig = CPU | `!${CPU}`
 type OSConfig = NodeJS.Platform | `!${NodeJS.Platform}`
 
-export interface PackageJsonConfiguration {
+export type PackageJsonConfiguration = {
     nodeVersion?: string
     cpus?: CpuConfig[]
     os?: OSConfig[]
 }
 
-export interface Reflection {
+export type Reflection = {
     name: string
     http: {
         name: string

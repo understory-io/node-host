@@ -1,11 +1,11 @@
 import { performance } from 'perf_hooks'
 import { highPrecisionISODate } from './host/logging.js'
 
-export interface Environment {
+export type Environment = {
     readonly [key: string]: string
 }
 
-export interface Logger {
+export type Logger = {
     enrich(fields: object): Logger
     trace(message: string, error?: unknown, fields?: object): void
     debug(message: string, error?: unknown, fields?: object): void
@@ -15,7 +15,7 @@ export interface Logger {
     fatal(message: string, error?: unknown, fields?: object): void
 }
 
-export interface AbortSignal {
+export type AbortSignal = {
     aborted: boolean
 
     addEventListener: (
@@ -62,7 +62,7 @@ export function arraySpreadable(json?: Json): readonly Json[] {
     return json as readonly Json[]
 }
 
-export interface HandlerConfiguration {
+export type HandlerConfiguration = {
     /**
      * An indication of CPU usage of the handler.
      * @default 'low'
@@ -89,7 +89,7 @@ export interface HandlerConfiguration {
     readonly timeout?: number
 }
 
-export interface Context {
+export type Context = {
     readonly env: Environment
     readonly log: Logger
     readonly signal: AbortSignal

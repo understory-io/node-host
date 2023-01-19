@@ -4,7 +4,7 @@ import type { Json, ResponseHeaders, Result } from '../http.js'
 import { ClientInfo, RootLogger } from './context.js'
 import type { HttpHandler } from './registry.js'
 
-export interface Response {
+export type Response = {
     headers: { readonly [key: string]: string }
     status: number
     body?: string | Buffer
@@ -12,16 +12,16 @@ export interface Response {
 
 type RequestOptions = BodylessRequestOptions | StringRequestOptions | JsonRequestOptions
 
-interface BodylessRequestOptions {
+type BodylessRequestOptions = {
     uri: string
     headers?: { readonly [key: string]: string }
 }
 
-interface StringRequestOptions extends BodylessRequestOptions {
+type StringRequestOptions = BodylessRequestOptions & {
     body: string
 }
 
-interface JsonRequestOptions extends BodylessRequestOptions {
+type JsonRequestOptions = BodylessRequestOptions & {
     json: Json
 }
 

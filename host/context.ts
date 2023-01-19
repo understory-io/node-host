@@ -3,7 +3,7 @@ import { EventEmitter } from './emitter.js'
 import { makeLogger } from './logging.js'
 import { Metadata } from './registry.js'
 
-export interface ClientInfo {
+export type ClientInfo = {
     readonly operationId?: string
     readonly clientId?: string
     readonly clientIp?: string
@@ -11,28 +11,28 @@ export interface ClientInfo {
     readonly userAgent?: string
 }
 
-export interface EventMetadata {
+export type EventMetadata = {
     topic: string
     type: string
     subject: string
     id?: string
 }
 
-export interface BufferedEvent {
+export type BufferedEvent = {
     eventTime: Date
     meta: Omit<EventMetadata, 'topic'>
     ids: ClientInfo
     json?: string
 }
 
-export interface EventTransport {
+export type EventTransport = {
     readonly publishRate: number
     sendEvents(topic: string, events: BufferedEvent[], signal: AbortSignal): Promise<void>
 }
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warning' | 'error' | 'fatal'
 
-export interface LogEntry {
+export type LogEntry = {
     readonly level: LogLevel
     readonly timestamp: number
     readonly message: string
@@ -40,7 +40,7 @@ export interface LogEntry {
     readonly json: string
 }
 
-export interface LogTransport {
+export type LogTransport = {
     readonly publishRate?: number
     sendEntries(entries: LogEntry[], signal: AbortSignal): Promise<void> | undefined
 }
@@ -63,10 +63,10 @@ class LogMulticaster implements LogTransport {
     }
 }
 
-export interface RootLogger extends Logger {
+export type RootLogger = {
     enrichReserved(fields: object): RootLogger
     flush(): Promise<void>
-}
+} & Logger
 
 export function createContext(
     clientInfo: ClientInfo,

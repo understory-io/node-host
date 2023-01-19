@@ -1,7 +1,7 @@
 import { HandlerConfiguration } from '../context.js'
 import { Handler } from '../http.js'
 
-export interface HttpHandler {
+export type HttpHandler = {
     meta: Metadata | undefined
     config: (PackageConfiguration & HandlerConfiguration) | undefined
     method: Method
@@ -10,7 +10,7 @@ export interface HttpHandler {
     entry: Handler
 }
 
-interface HandlerTypes {
+type HandlerTypes = {
     http: HttpHandler
 }
 
@@ -55,11 +55,11 @@ export function setMeta(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface PackageConfiguration extends HandlerConfiguration {
+export type PackageConfiguration = HandlerConfiguration & {
     // Placeholder for package-level configurations
 }
 
-export interface Metadata {
+export type Metadata = {
     packageName: string
     fileName: string
     revision: string | undefined
