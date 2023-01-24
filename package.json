@@ -29,10 +29,12 @@
     "./http": "./host/http.js"
   },
   "scripts": {
+    "start": "riddance-watch",
     "prepack": "riddance-build",
-    "start": "riddance-watch"
+    "prepublishOnly": "riddance-prepublish",
+    "postpublish": "riddance-sync"
   },
   "devDependencies": {
-    "@riddance/env": "0.2.6"
+    "@riddance/env": "0.2.9"
   }
 }
