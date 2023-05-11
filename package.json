@@ -30,9 +30,7 @@
   },
   "scripts": {
     "start": "riddance-watch",
-    "prepack": "riddance-build",
-    "prepublishOnly": "riddance-prepublish",
-    "postpublish": "riddance-sync"
+    "prepare": "riddance-build"
   },
   "devDependencies": {
     "@riddance/env": "0.2.9"
