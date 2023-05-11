@@ -21,6 +21,7 @@ function addHandler(type: keyof HandlerTypes, handler: HttpHandler) {
 }
 
 export function getHandlers(type: keyof HandlerTypes) {
+    console.log("All handlers: ", handlers)
     return (handlers[type] ?? []) as HttpHandler[]
 }
 
