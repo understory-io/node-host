@@ -133,6 +133,7 @@ export function registerHttpHandler(
     configOrHandler: HandlerConfiguration | Handler,
     fn?: Handler,
 ): void {
+    console.log(`Register handler: ${method} /${path}`)
     if (typeof configOrHandler === 'function') {
         httpHostRegistry(getMetadata(), undefined, method, path, configOrHandler)
     } else {
