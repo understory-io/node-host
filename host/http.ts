@@ -31,6 +31,7 @@ export async function executeRequest(
     handler: HttpHandler,
     options: RequestOptions,
     success: () => Promise<unknown>,
+    rethrow: boolean = true
 ): Promise<Response> {
     const isShallow =
         context.env.SHALLOW_KEY && options.headers?.['x-shallow'] === context.env.SHALLOW_KEY
@@ -101,7 +102,10 @@ export async function executeRequest(
             const response = errorToResponse(e)
             log = log.enrichReserved({ response })
             log.error('Request END', e)
-            return response
+
+            if(!rethrow){
+                return response
+            }
         } catch (convertError) {
             log.error('Could not convert exception to error response.', convertError)
             return {
@@ -109,6 +113,7 @@ export async function executeRequest(
                 status: 500,
             }
         }
+        throw e
     }
 }
 
