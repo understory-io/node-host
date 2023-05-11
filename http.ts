@@ -40,6 +40,7 @@ export function get(
     configOrHandler: HttpHandlerConfiguration | Handler,
     fn?: Handler,
 ): void {
+    console.log('Register GET handler', path)
     registerHttpHandler('GET', path, configOrHandler, fn)
 }
 export function post(path: string, fn: Handler): void
@@ -49,6 +50,7 @@ export function post(
     configOrHandler: HttpHandlerConfiguration | Handler,
     fn?: Handler,
 ): void {
+    console.log('Register POST handler', path)
     registerHttpHandler('POST', path, configOrHandler, fn)
 }
 export function put(path: string, fn: Handler): void
@@ -58,6 +60,7 @@ export function put(
     configOrHandler: HttpHandlerConfiguration | Handler,
     fn?: Handler,
 ): void {
+    console.log('Register PUT handler', path)
     registerHttpHandler('PUT', path, configOrHandler, fn)
 }
 export function patch(path: string, fn: Handler): void
@@ -67,6 +70,7 @@ export function patch(
     configOrHandler: HttpHandlerConfiguration | Handler,
     fn?: Handler,
 ): void {
+    console.log('Register PATCH handler', path)
     registerHttpHandler('PATCH', path, configOrHandler, fn)
 }
 export function del(path: string, fn: Handler): void
@@ -76,5 +80,6 @@ export function del(
     configOrHandler: HttpHandlerConfiguration | Handler,
     fn?: Handler,
 ): void {
+    console.log('Register DELETE handler', path)
     registerHttpHandler('DELETE', path, configOrHandler, fn)
 }
