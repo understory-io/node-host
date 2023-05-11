@@ -30,7 +30,7 @@
   },
   "scripts": {
     "start": "riddance-watch",
-    "prepare": "riddance-build"
+    "prepare": "tsc"
   },
   "devDependencies": {
     "@riddance/env": "0.2.9"
