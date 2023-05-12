@@ -21,7 +21,6 @@ function addHandler(type: keyof HandlerTypes, handler: HttpHandler) {
 }
 
 export function getHandlers(type: keyof HandlerTypes) {
-    console.log("All handlers: ", handlers)
     return (handlers[type] ?? []) as HttpHandler[]
 }
 
@@ -133,7 +132,6 @@ export function registerHttpHandler(
     configOrHandler: HandlerConfiguration | Handler,
     fn?: Handler,
 ): void {
-    console.log(`Register handler: ${method} /${path}`)
     if (typeof configOrHandler === 'function') {
         httpHostRegistry(getMetadata(), undefined, method, path, configOrHandler)
     } else {
