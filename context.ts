@@ -95,6 +95,10 @@ export type HandlerConfiguration = {
    * The number of seconds the function is expected to finish executing in.
    */
   readonly timeout?: number;
+  /**
+   * Any AWS Lambda Layers to be added to the function. An array of ARNs.
+   */
+  readonly layers?: string[];
 };
 
 export type Context = {
