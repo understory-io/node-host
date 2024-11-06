@@ -31,6 +31,7 @@ export async function executeRequest(
     handler: HttpHandler,
     options: RequestOptions,
     success: () => Promise<unknown>,
+    rethrow: boolean = true
 ): Promise<Response> {
     const isShallow =
         context.env.SHALLOW_KEY && options.headers?.['x-shallow'] === context.env.SHALLOW_KEY
@@ -101,7 +102,16 @@ export async function executeRequest(
             const response = errorToResponse(e)
             log = log.enrichReserved({ response })
             log.error('Request END', e)
-            return response
+
+            // If we do not want to rethrow errors, ie. for production environments,
+            // we should return the generated response code.
+            // For any others where we do wish to rethrow, we only do it for 500 Internal Server Error
+            // status codes, as any other code is assumed to be OK, and we do not want change a
+            // 404 Not Found or 400 Bad Request into a 500 Internal Server Error, which Lambda would
+            // otherwise return "on error".
+            if(!rethrow || rethrow && response.status !== 500){
+                return response
+            }
         } catch (convertError) {
             log.error('Could not convert exception to error response.', convertError)
             return {
@@ -109,6 +119,7 @@ export async function executeRequest(
                 status: 500,
             }
         }
+        throw e
     }
 }
 

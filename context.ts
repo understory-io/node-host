@@ -157,6 +157,29 @@ export function httpRequestHeaders(context: Context) {
   return headers;
 }
 
+export async function throwOnNotOK<
+    T extends { ok?: boolean; status?: number; text?: () => Promise<string> },
+>(response: T, message: string, data?: { [key: string]: unknown }) {
+    if (response.ok === false) {
+        throw Object.assign(new Error(message), {
+            response: {
+                status: response.status,
+                body: limitSize(await response.text?.()),
+            },
+            ...data,
+        })
+    }
+    return response
+}
+
+function limitSize(text: string | undefined) {
+    if ((text?.length ?? 0) > 2048) {
+        return text?.substring(0, 2048)
+    }
+    return text
+}
+
+
 export async function measure<T>(
   logger: { trace: (message: string, _: undefined, f: object) => void },
   name: string,
