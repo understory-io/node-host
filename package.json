@@ -30,9 +30,10 @@
   },
   "scripts": {
     "start": "riddance-watch",
-    "prepare": "tsc"
+    "prepare": "time tsc --noCheck --listFiles"
   },
   "devDependencies": {
-    "@riddance/env": "0.2.9"
+    "@riddance/env": "git@github.com:understory-io/node-env.git#f5568edc657b2fd1c13aafbff063a60871a7a643",
+    "@tsconfig/node22": "^22.0.1"
   }
 }
