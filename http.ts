@@ -12,6 +12,7 @@ export type FullResult = {
     headers?: ResponseHeaders
     status?: number
     body?: unknown
+    isBase64Encoded?: boolean
 }
 
 export type Result = void | string | FullResult
