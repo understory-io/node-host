@@ -8,6 +8,7 @@ export type Response = {
     headers: { readonly [key: string]: string }
     status: number
     body?: string | Buffer
+    isBase64Encoded?: boolean
 }
 
 type RequestOptions = BodylessRequestOptions | StringRequestOptions | JsonRequestOptions
@@ -152,6 +153,7 @@ function resultToResponse(result: Result, withLogBody: boolean): Response & { lo
                 status: result.status ?? 200,
                 body: result.body,
                 logBody,
+                isBase64Encoded: result.isBase64Encoded,
             }
         } else if (Buffer.isBuffer(result.body)) {
             const logBody = withLogBody ? result.body.toString('base64') : undefined
@@ -160,6 +162,7 @@ function resultToResponse(result: Result, withLogBody: boolean): Response & { lo
                 status: result.status ?? 200,
                 body: result.body,
                 logBody,
+                isBase64Encoded: result.isBase64Encoded,
             }
         } else {
             const logBody = withLogBody ? result.body : undefined
