@@ -99,6 +99,11 @@ export type HandlerConfiguration = {
    * Any AWS Lambda Layers to be added to the function. An array of ARNs.
    */
   readonly layers?: string[];
+  /**
+   * A boolean indicating whether the request.body should be passed as a raw string to the handler instead of parsed JSON.
+   * @default false
+   */
+  readonly rawBody?: boolean;
 };
 
 export type Context = {
