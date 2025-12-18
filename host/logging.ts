@@ -51,7 +51,7 @@ class LogBuffer {
         customEnrichment: object | undefined,
     ) {
         const offset = performance.now()
-        const json = JSON.stringify({
+        const json = jsonStringify({
             timestamp: highPrecisionISODate(offset),
             level,
             message,
@@ -278,4 +278,24 @@ function errorAsJson(error: unknown): Json | undefined {
         message: (error as object | undefined)?.toString(),
         name: typeof error,
     } as Json
+}
+
+/**
+ * This is a safe version of JSON.stringify that can handle BigInt values by
+ * converting them to strings.
+ *
+ * This is particularly useful when using ConnectRPC, which may include BigInt
+ * values in its messages when using uint64/int64 types.
+ */
+function jsonStringify(data: unknown): string {
+    return JSON.stringify(data, bigIntTransformer)
+}
+
+/**
+ * This is a transformer function for JSON.stringify that converts BigInt values
+ * to strings. This is necessary because JSON does not natively support BigInt
+ * types.
+ */
+function bigIntTransformer(_key: string, value: unknown) {
+    return typeof value === 'bigint' ? value.toString() : value
 }
