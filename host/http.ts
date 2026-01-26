@@ -102,7 +102,11 @@ export async function executeRequest(
         try {
             const response = errorToResponse(e)
             log = log.enrichReserved({ response })
-            log.error('Request END', e)
+            if (response.status >= 500) {
+                log.error('Request END', e)
+            } else {
+                log.debug('Request END')
+            }
 
             // If we do not want to rethrow errors, ie. for production environments,
             // we should return the generated response code.
