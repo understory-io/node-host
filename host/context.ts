@@ -136,7 +136,7 @@ export function createContext(
         onSuccess: (fn: () => Promise<void> | void) => successHandlers.push(fn),
     }
     const timeoutHandle = setTimeout(() => {
-        logger.error('Timeout.', undefined, undefined)
+        logger.warn('Timeout.', undefined, undefined)
         innerController.abort()
         // eslint-disable-next-line no-void
         void logger.flush()
@@ -144,7 +144,7 @@ export function createContext(
         void emitter.flush()
     }, timeout)
     const flushHandle = setTimeout(() => {
-        logger.error('Aborting flush.', undefined, undefined)
+        logger.warn('Aborting flush.', undefined, undefined)
         outerController.abort()
     }, timeout + 15000)
     return {
