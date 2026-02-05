@@ -91,11 +91,14 @@ export async function executeRequest(
                 body: response.logBody,
             },
         })
-        if (response.status < 300) {
-            log.debug('Request END')
-            await success()
+        if (response.status >= 500) {
+            log.error('Request END')            
         } else {
-            log.warn('Request END')
+            log.debug('Request END')
+        }
+
+        if (response.status < 300) {
+            await success()
         }
         return response
     } catch (e) {

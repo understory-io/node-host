@@ -1,6 +1,6 @@
 {
   "name": "@riddance/host",
-  "version": "0.0.17",
+  "version": "0.0.20",
   "type": "module",
   "license": "MIT",
   "engines": {
