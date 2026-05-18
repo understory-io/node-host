@@ -92,9 +92,9 @@ export async function executeRequest(
             },
         })
         if (response.status >= 500) {
-            log.error('Request END')            
+            log.error('Request END')
         } else {
-            log.debug('Request END')
+            log.info('Request END')
         }
 
         if (response.status < 300) {
@@ -108,7 +108,7 @@ export async function executeRequest(
             if (response.status >= 500) {
                 log.error('Request END', e)
             } else {
-                log.debug('Request END')
+                log.info('Request END')
             }
 
             // If we do not want to rethrow errors, ie. for production environments,
