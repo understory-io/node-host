@@ -36,6 +36,6 @@
     "@riddance/env": "0.2.9"
   },
   "allowScripts": {
-    "@riddance/env@0.2.9": true
+    "@riddance/env": true
   }
 }
