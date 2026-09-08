@@ -1,6 +1,6 @@
 {
   "name": "@riddance/host",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -34,5 +34,8 @@
   },
   "devDependencies": {
     "@riddance/env": "0.2.9"
+  },
+  "allowScripts": {
+    "@riddance/env@0.2.9": true
   }
 }
