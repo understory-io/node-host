@@ -1,6 +1,7 @@
 import { performance } from 'perf_hooks'
 import { AbortSignal, Json, Logger } from '../context.js'
 import { LogEntry, LogLevel, LogTransport, RootLogger } from './context.js'
+import { REDACTED, redactingReplacer, redactText } from './redaction.js'
 
 export function makeLogger(
     transport: LogTransport,
@@ -55,7 +56,7 @@ class LogBuffer {
             timestamp: highPrecisionISODate(offset),
             level,
             message,
-            error: errorAsJson(error),
+            error: loggableError(error),
             ...reservedEnrichment,
             ...((fields || customEnrichment) && {
                 fields: customEnrichment
@@ -257,6 +258,14 @@ class EnrichingLogger implements Logger {
     }
 }
 
+function loggableError(error: unknown) {
+    try {
+        return withRedactedBodies(errorAsJson(error))
+    } catch {
+        return REDACTED
+    }
+}
+
 function errorAsJson(error: unknown): Json | undefined {
     if (error === undefined || error === null) {
         return undefined
@@ -280,22 +289,51 @@ function errorAsJson(error: unknown): Json | undefined {
     } as Json
 }
 
-/**
- * This is a safe version of JSON.stringify that can handle BigInt values by
- * converting them to strings.
- *
- * This is particularly useful when using ConnectRPC, which may include BigInt
- * values in its messages when using uint64/int64 types.
- */
-function jsonStringify(data: unknown): string {
-    return JSON.stringify(data, bigIntTransformer)
+// HTTP errors carry the response they describe as text: `body` for the response a handler
+// rejects with, `response.body` for an upstream response that was not OK.
+function withRedactedBodies(json: Json | undefined) {
+    if (!json) {
+        return json
+    }
+    const { body, response } = json as { body?: unknown; response?: { body?: unknown } | null }
+    return {
+        ...(json as object),
+        ...(typeof body === 'string' && { body: redactText(body) }),
+        ...(typeof response?.body === 'string' && {
+            response: { ...response, body: redactText(response.body) },
+        }),
+    }
 }
 
 /**
- * This is a transformer function for JSON.stringify that converts BigInt values
- * to strings. This is necessary because JSON does not natively support BigInt
- * types.
+ * Serializes a log entry with credentials redacted at any depth.
+ *
+ * Logging must neither throw into the caller nor drop the entry, so a value that cannot be
+ * serialized, such as a circular or too deeply nested structure, is logged as the redaction
+ * marker and the rest of the entry is kept.
  */
-function bigIntTransformer(_key: string, value: unknown) {
-    return typeof value === 'bigint' ? value.toString() : value
+function jsonStringify(data: { [key: string]: unknown }): string {
+    try {
+        return JSON.stringify(data, redactingReplacer)
+    } catch {
+        return JSON.stringify(serializable(data, 2), redactingReplacer)
+    }
+}
+
+function serializable(value: unknown, depth: number): unknown {
+    try {
+        JSON.stringify(value, redactingReplacer)
+        return value
+    } catch {
+        if (depth === 0 || typeof value !== 'object' || value === null || Array.isArray(value)) {
+            return REDACTED
+        }
+        try {
+            return Object.fromEntries(
+                Object.entries(value).map(([key, v]) => [key, serializable(v, depth - 1)]),
+            )
+        } catch {
+            return REDACTED
+        }
+    }
 }
