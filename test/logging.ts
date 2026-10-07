@@ -9,7 +9,8 @@ type Logged = {
         message?: string
         stack?: string
         body?: unknown
-        response?: { status?: number; body?: unknown }
+        config?: unknown
+        response?: { status?: number; body?: unknown; headers?: unknown }
     }
     fields?: { [key: string]: unknown }
 }
@@ -107,6 +108,61 @@ describe('logging', () => {
         })
         assert.ok(output.includes('control-id'))
         assert.equal(error.response.body.includes('fake-access-token'), true)
+    })
+
+    it('redacts fields named like credential headers, such as the headers of a logged error', async () => {
+        const error = Object.assign(new Error('control-message'), {
+            config: {
+                url: 'https://api.example.test/feeds',
+                headers: {
+                    Authorization: 'Bearer fake-jwt',
+                    'Content-Type': 'application/json',
+                },
+            },
+            response: {
+                status: 401,
+                headers: {
+                    'Set-Cookie': 'session=fake-set-cookie',
+                    'x-request-id': 'control-request-id',
+                },
+            },
+        })
+
+        const { output, lines } = await capture(log => {
+            log.error('Upstream call failed', error, {
+                cookie: 'session=fake-cookie',
+                proxyAuthorization: 'Basic fake-basic',
+                upstream: { 'X-Shallow': 'fake-shallow-key', cookieConsent: 'control-consent' },
+                authorizationUrl: 'https://auth.example.test/authorize',
+            })
+        })
+
+        assertNotLogged(
+            output,
+            'fake-jwt',
+            'fake-set-cookie',
+            'fake-cookie',
+            'fake-basic',
+            'fake-shallow-key',
+        )
+        const logged = lines[0]?.error
+        assert.ok(logged)
+        assert.equal(logged.message, 'control-message')
+        assert.deepEqual(logged.config, {
+            url: 'https://api.example.test/feeds',
+            headers: { Authorization: REDACTED, 'Content-Type': 'application/json' },
+        })
+        assert.deepEqual(logged.response, {
+            status: 401,
+            headers: { 'Set-Cookie': REDACTED, 'x-request-id': 'control-request-id' },
+        })
+        assert.deepEqual(lines[0]?.fields, {
+            cookie: REDACTED,
+            proxyAuthorization: REDACTED,
+            upstream: { 'X-Shallow': REDACTED, cookieConsent: 'control-consent' },
+            authorizationUrl: 'https://auth.example.test/authorize',
+        })
+        assert.equal(error.config.headers.Authorization, 'Bearer fake-jwt')
     })
 
     it('logs values it cannot serialize as the marker and keeps the rest of the entry', async () => {

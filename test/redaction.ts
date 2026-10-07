@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict'
 import {
     isSensitiveField,
+    isSensitiveQueryParameter,
     REDACTED,
+    redactHeaders,
     redactingReplacer,
     redactText,
+    redactUri,
     SENSITIVE_FIELD_SUFFIXES,
 } from '../host/redaction.js'
 
@@ -35,6 +38,12 @@ const sensitiveNames = [
     'WEBHOOK_SECRET',
     'SESSION_TOKEN',
     'SERVICE_API_KEY',
+    'Authorization',
+    'proxy-authorization',
+    'Cookie',
+    'set-cookie',
+    'setCookie',
+    'X-Shallow',
 ]
 
 const readableNames = [
@@ -55,10 +64,13 @@ const readableNames = [
     'code',
     'signature',
     'NODE_ENV',
+    'authorizationUrl',
+    'cookieConsent',
+    'shallow',
 ]
 
 describe('redaction', () => {
-    it('matches field names by their normalized ending', () => {
+    it('matches field names by their normalized ending or as credential headers', () => {
         for (const name of sensitiveNames) {
             assert.equal(isSensitiveField(name), true, name)
         }
@@ -68,6 +80,44 @@ describe('redaction', () => {
         for (const suffix of SENSITIVE_FIELD_SUFFIXES) {
             assert.equal(isSensitiveField(suffix), true, suffix)
         }
+    })
+
+    it('also matches bearer-value names in query parameters only', () => {
+        for (const name of [...sensitiveNames, 'key', 'Key', 'code', 'sig', 'signature']) {
+            assert.equal(isSensitiveQueryParameter(name), true, name)
+        }
+        for (const name of ['page', 'keyId', 'code_challenge', 'client_id', 'token_type']) {
+            assert.equal(isSensitiveQueryParameter(name), false, name)
+        }
+    })
+
+    it('redacts credential headers case-insensitively', () => {
+        const headers = {
+            Authorization: 'Bearer fake-jwt',
+            'proxy-authorization': 'Basic fake-basic',
+            'api-key': 'fake-api-key',
+            'X-Api-Key': 'fake-x-api-key',
+            cookie: 'session=fake-cookie',
+            'set-cookie': 'session=fake-set-cookie',
+            'x-shallow': 'fake-shallow-key',
+            'user-agent': 'control-agent',
+            'x-request-id': 'control-request-id',
+        }
+
+        const redacted = redactHeaders(headers)
+
+        assert.deepEqual(redacted, {
+            Authorization: REDACTED,
+            'proxy-authorization': REDACTED,
+            'api-key': REDACTED,
+            'X-Api-Key': REDACTED,
+            cookie: REDACTED,
+            'set-cookie': REDACTED,
+            'x-shallow': REDACTED,
+            'user-agent': 'control-agent',
+            'x-request-id': 'control-request-id',
+        })
+        assert.equal(headers.Authorization, 'Bearer fake-jwt')
     })
 
     it('redacts nested fields and array items while serializing, without touching the original', () => {
@@ -127,5 +177,17 @@ describe('redaction', () => {
             'key=control-key&code=control-code',
         )
         assert.equal(redactText(''), '')
+    })
+
+    it('redacts credential query parameters in a URI', () => {
+        assert.equal(
+            redactUri(
+                'https://api.example.test/feeds?accessKey=fake-access-key&page=2&access_token=fake-access-token&key=fake-key&Sig=fake-sig#top',
+            ),
+            `https://api.example.test/feeds?accessKey=${REDACTED}&page=2&access_token=${REDACTED}&key=${REDACTED}&Sig=${REDACTED}#top`,
+        )
+        const control = 'https://api.example.test/feeds?page=2&keyId=control-key-id'
+        assert.equal(redactUri(control), control)
+        assert.equal(redactUri('https://api.example.test/feeds'), 'https://api.example.test/feeds')
     })
 })
