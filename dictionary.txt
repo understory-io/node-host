@@ -2,3 +2,5 @@ Bodyless
 devenv
 Multicaster
 postpublish
+apikey
+loggable

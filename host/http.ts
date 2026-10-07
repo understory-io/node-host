@@ -2,6 +2,7 @@ import { parse, UrlWithParsedQuery } from 'node:url'
 import { Context, measure } from '../context.js'
 import type { Json, ResponseHeaders, Result } from '../http.js'
 import { ClientInfo, RootLogger } from './context.js'
+import { redactHeaders, redactText, redactUri } from './redaction.js'
 import type { HttpHandler } from './registry.js'
 
 export type Response = {
@@ -37,13 +38,10 @@ export async function executeRequest(
     const isShallow =
         context.env.SHALLOW_KEY && options.headers?.['x-shallow'] === context.env.SHALLOW_KEY
     const includeBodyInLogs = !handler.config?.excludeBodyFromLogs
-    const loggableOptions = {
-        method: handler.method,
-        ...options,
-        headers: redactHeaders(options.headers),
-    }
-    const logRequest = includeBodyInLogs ? loggableOptions : withoutRequestBody(loggableOptions)
-    log = log.enrichReserved({ meta: context.meta, request: logRequest })
+    log = log.enrichReserved({
+        meta: context.meta,
+        request: loggableRequest(handler.method, options, includeBodyInLogs),
+    })
     if (isShallow) {
         log.trace('Shallow request')
         return {
@@ -107,9 +105,15 @@ export async function executeRequest(
     } catch (e) {
         try {
             const response = errorToResponse(e)
-            log = log.enrichReserved({ response })
+            log = log.enrichReserved({
+                response: {
+                    status: response.status,
+                    headers: redactHeaders(response.headers),
+                    body: includeBodyInLogs ? loggableText(response.body) : undefined,
+                },
+            })
             if (response.status >= 500) {
-                log.error('Request END', e)
+                log.error('Request END', includeBodyInLogs ? e : withoutBodies(e))
             } else {
                 log.info('Request END')
             }
@@ -141,7 +145,7 @@ function resultToResponse(result: Result, withLogBody: boolean): Response & { lo
             status: 204,
         }
     } else if (typeof result === 'string') {
-        const logBody = withLogBody ? result : undefined
+        const logBody = withLogBody ? redactText(result) : undefined
         return {
             headers: {
                 'content-type': 'text/plain',
@@ -157,7 +161,7 @@ function resultToResponse(result: Result, withLogBody: boolean): Response & { lo
                 status: result.status ?? 200,
             }
         } else if (typeof result.body === 'string') {
-            const logBody = withLogBody ? result.body : undefined
+            const logBody = withLogBody ? redactText(result.body) : undefined
             return {
                 headers: withContentType(result.headers, 'text/plain'),
                 status: result.status ?? 200,
@@ -186,24 +190,38 @@ function resultToResponse(result: Result, withLogBody: boolean): Response & { lo
     }
 }
 
-// Every log entry of a request carries its headers, so credentials sent as
-// headers (internal api-key, bearer tokens, webhook signatures) would otherwise
-// end up in plaintext in every log line, at every level.
-const sensitiveHeader =
-    /^(?:authorization|proxy-authorization|cookie|set-cookie|x-shallow)$|api[-_]?key|token|secret|password|signature|checksum|hmac|-sig$/iu
-
-export function redactHeaders<T extends { readonly [key: string]: string } | undefined>(
-    headers: T,
-): T {
-    if (!headers) {
-        return headers
+function loggableRequest(method: string, options: RequestOptions, includeBody: boolean) {
+    const request = {
+        method,
+        ...options,
+        uri: redactUri(options.uri),
+        headers: redactHeaders(options.headers),
     }
-    return Object.fromEntries(
-        Object.entries(headers).map(([name, value]) => [
-            name,
-            sensitiveHeader.test(name) ? '[REDACTED]' : value,
-        ]),
-    ) as T
+    if (!includeBody) {
+        return withoutRequestBody(request)
+    }
+    if (hasStringBody(request)) {
+        return { ...request, body: redactText(request.body) }
+    }
+    return request
+}
+
+function loggableText(text: string | Buffer | undefined) {
+    return typeof text === 'string' ? redactText(text) : text
+}
+
+// The error is logged with its own properties, which include the response bodies it carries.
+function withoutBodies(error: unknown) {
+    if (!(error instanceof Object)) {
+        return error
+    }
+    const { body, response, ...properties } = Object.getOwnPropertyDescriptors(error)
+    const upstream: unknown = response?.value
+    if (upstream instanceof Object) {
+        const { body: upstreamBody, ...bodyless } = upstream as { body?: unknown }
+        properties.response = { ...response, value: bodyless }
+    }
+    return Object.create(Object.getPrototypeOf(error) as object | null, properties) as unknown
 }
 
 function withoutRequestBody(options: RequestOptions & { method: string }) {
