@@ -1,6 +1,6 @@
 {
   "name": "@riddance/host",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -30,7 +30,8 @@
   },
   "scripts": {
     "start": "riddance-watch",
-    "prepare": "tsc"
+    "prepare": "tsc",
+    "test": "mocha"
   },
   "devDependencies": {
     "@riddance/env": "0.2.9"

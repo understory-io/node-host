@@ -37,9 +37,12 @@ export async function executeRequest(
     const isShallow =
         context.env.SHALLOW_KEY && options.headers?.['x-shallow'] === context.env.SHALLOW_KEY
     const includeBodyInLogs = !handler.config?.excludeBodyFromLogs
-    const logRequest = includeBodyInLogs
-        ? { method: handler.method, ...options }
-        : withoutRequestBody({ method: handler.method, ...options })
+    const loggableOptions = {
+        method: handler.method,
+        ...options,
+        headers: redactHeaders(options.headers),
+    }
+    const logRequest = includeBodyInLogs ? loggableOptions : withoutRequestBody(loggableOptions)
     log = log.enrichReserved({ meta: context.meta, request: logRequest })
     if (isShallow) {
         log.trace('Shallow request')
@@ -87,7 +90,7 @@ export async function executeRequest(
         log = log.enrichReserved({
             response: {
                 status: response.status,
-                headers: response.headers,
+                headers: redactHeaders(response.headers),
                 body: response.logBody,
             },
         })
@@ -181,6 +184,26 @@ function resultToResponse(result: Result, withLogBody: boolean): Response & { lo
             }
         }
     }
+}
+
+// Every log entry of a request carries its headers, so credentials sent as
+// headers (internal api-key, bearer tokens, webhook signatures) would otherwise
+// end up in plaintext in every log line, at every level.
+const sensitiveHeader =
+    /^(?:authorization|proxy-authorization|cookie|set-cookie|x-shallow)$|api[-_]?key|token|secret|password|signature|checksum|hmac|-sig$/iu
+
+export function redactHeaders<T extends { readonly [key: string]: string } | undefined>(
+    headers: T,
+): T {
+    if (!headers) {
+        return headers
+    }
+    return Object.fromEntries(
+        Object.entries(headers).map(([name, value]) => [
+            name,
+            sensitiveHeader.test(name) ? '[REDACTED]' : value,
+        ]),
+    ) as T
 }
 
 function withoutRequestBody(options: RequestOptions & { method: string }) {
